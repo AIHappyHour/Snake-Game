@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nokia Snake Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            color: #9bb653;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            color: #c0c0c0;
+        }
+        
+        #phoneContainer {
+            background: linear-gradient(145deg, #333333, #1a1a1a);
+            border-radius: 25px 25px 15px 15px;
+            padding: 25px 20px 30px 20px;
+            box-shadow: 
+                0 0 30px rgba(0,0,0,0.8),
+                inset 0 2px 5px rgba(255,255,255,0.1),
+                inset 0 -2px 5px rgba(0,0,0,0.3);
+            position: relative;
+            max-width: 280px;
+        }
+        
+        #phoneContainer::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 6px;
+            background: #1a1a1a;
+            border-radius: 3px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        #phoneContainer::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        #screenBezel {
+            background: linear-gradient(145deg, #2a2a2a, #0f0f0f);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 
+                inset 0 2px 4px rgba(0,0,0,0.6),
+                inset 0 -1px 2px rgba(255,255,255,0.1);
+        }
+        
+        #gameContainer {
+            border: 2px solid #1a3009;
+            background: linear-gradient(135deg, #3d6b1a, #2d5016);
+            border-radius: 4px;
+            padding: 8px;
+            box-shadow: 
+                inset 0 1px 3px rgba(0,0,0,0.4),
+                0 0 10px rgba(155, 182, 83, 0.2);
+        }
+        
+        #gameCanvas {
+            background: linear-gradient(135deg, #7ba428, #6b9025);
+            border: 1px solid #5c7d1f;
+            display: block;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        #score {
+            text-align: center;
+            margin: 6px 0;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            color: #b5d463;
+        }
+        
+        #controls {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 11px;
+            opacity: 0.9;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.7);
+            color: #9bb653;
+        }
+        
+        #gameOver {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #2d5016, #1a3009);
+            padding: 20px;
+            border: 3px solid #9bb653;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            box-shadow: 
+                0 0 30px rgba(0,0,0,0.8),
+                inset 0 1px 3px rgba(255,255,255,0.1);
+        }
+        
+        button {
+            background: linear-gradient(145deg, #9bb653, #b5d463);
+            color: #1a3009;
+            border: none;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.3),
+                inset 0 1px 2px rgba(255,255,255,0.2);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            background: linear-gradient(145deg, #b5d463, #c5e473);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>🐍 90s Nostalgia</h1>
+    
+    <div id="phoneContainer">
+        <div id="screenBezel">
+            <div id="gameContainer">
+                <div id="score">Score: 0</div>
+                <canvas id="gameCanvas" width="240" height="240"></canvas>
+                <div id="controls">
+                    Use Arrow Keys to Move<br>
+                    Press Any Arrow Key to Start!
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="gameOver">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button onclick="resetGame()">Play Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+
+        // Game settings - Single difficulty level
+        const gridSize = 15;
+        const tileCount = canvas.width / gridSize;
+        const gameSpeed = 200; // Fixed speed in milliseconds
+
+        let snake = [{x: 10, y: 10}];
+        let food = {};
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let gameRunning = true;
+
+        // Generate random food position
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * tileCount),
+                y: Math.floor(Math.random() * tileCount)
+            };
+            
+            // Make sure food doesn't spawn on snake
+            for (let segment of snake) {
+                if (segment.x === food.x && segment.y === food.y) {
+                    generateFood();
+                    return;
+                }
+            }
+        }
+
+        // Draw game elements
+        function drawGame() {
+            // Clear canvas
+            ctx.fillStyle = '#7ba428';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw snake
+            ctx.fillStyle = '#2d5016';
+            for (let segment of snake) {
+                ctx.fillRect(segment.x * gridSize + 2, segment.y * gridSize + 2, gridSize - 4, gridSize - 4);
+            }
+
+            // Draw snake head differently
+            if (snake.length > 0) {
+                ctx.fillStyle = '#1a3009';
+                ctx.fillRect(snake[0].x * gridSize + 1, snake[0].y * gridSize + 1, gridSize - 2, gridSize - 2);
+            }
+
+            // Draw food
+            ctx.fillStyle = '#d63031';
+            ctx.fillRect(food.x * gridSize + 1, food.y * gridSize + 1, gridSize - 2, gridSize - 2);
+        }
+
+        // Move snake
+        function moveSnake() {
+            if (!gameRunning || (dx === 0 && dy === 0)) return;
+
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+            // Check wall collision
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                gameOver();
+                return;
+            }
+
+            // Check self collision
+            for (let segment of snake) {
+                if (head.x === segment.x && head.y === segment.y) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            snake.unshift(head);
+
+            // Check food collision
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                scoreElement.textContent = 'Score: ' + score;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            gameOverElement.style.display = 'block';
+        }
+
+        // Reset game
+        function resetGame() {
+            snake = [{x: 10, y: 10}];
+            dx = 0;
+            dy = 0;
+            score = 0;
+            gameRunning = true;
+            scoreElement.textContent = 'Score: 0';
+            gameOverElement.style.display = 'none';
+            generateFood();
+            drawGame();
+        }
+
+        // Handle keyboard input
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    if (dy !== 1) {
+                        dx = 0;
+                        dy = -1;
+                    }
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    if (dy !== -1) {
+                        dx = 0;
+                        dy = 1;
+                    }
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    if (dx !== 1) {
+                        dx = -1;
+                        dy = 0;
+                    }
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    if (dx !== -1) {
+                        dx = 1;
+                        dy = 0;
+                    }
+                    e.preventDefault();
+                    break;
+            }
+        });
+
+        // Game loop
+        function gameLoop() {
+            moveSnake();
+            drawGame();
+        }
+
+        // Initialize game and start
+        function startGame() {
+            generateFood();
+            drawGame();
+            
+            // Start game loop at fixed 200ms for single difficulty
+            setInterval(gameLoop, 200);
+        }
+
+        // Start the game
+        startGame();
+    </script>
+</body>
+</html>

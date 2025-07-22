@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nokia Snake Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>90s Nostalgia Snake Game</title>
     <style>
         body {
             margin: 0;
@@ -34,6 +34,7 @@
                 inset 0 -2px 5px rgba(0,0,0,0.3);
             position: relative;
             max-width: 280px;
+            width: 90vw;
         }
         
         #phoneContainer::before {
@@ -106,6 +107,66 @@
             color: #9bb653;
         }
         
+        /* Touch Controls */
+        #touchControls {
+            display: none;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 5px;
+            margin-top: 10px;
+            width: 120px;
+            height: 120px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .touch-btn {
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            border: 1px solid #666;
+            border-radius: 8px;
+            color: #9bb653;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.3),
+                inset 0 1px 2px rgba(255,255,255,0.1);
+        }
+        
+        .touch-btn:active {
+            background: linear-gradient(145deg, #2a2a2a, #4a4a4a);
+            transform: scale(0.95);
+        }
+        
+        .touch-btn.up { grid-column: 2; grid-row: 1; }
+        .touch-btn.left { grid-column: 1; grid-row: 2; }
+        .touch-btn.right { grid-column: 3; grid-row: 2; }
+        .touch-btn.down { grid-column: 2; grid-row: 3; }
+        
+        /* Show touch controls on mobile */
+        @media (max-width: 768px) or (pointer: coarse) {
+            #touchControls {
+                display: grid;
+            }
+            
+            #controls {
+                font-size: 10px;
+            }
+            
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 15px;
+            }
+        }
+        
         #gameOver {
             position: fixed;
             top: 50%;
@@ -158,8 +219,14 @@
                 <div id="score">Score: 0</div>
                 <canvas id="gameCanvas" width="240" height="240"></canvas>
                 <div id="controls">
-                    Use Arrow Keys to Move<br>
-                    Press Any Arrow Key to Start!
+                    Use Arrow Keys or Touch Controls<br>
+                    Press Arrow Key or Touch to Start!
+                </div>
+                <div id="touchControls">
+                    <div class="touch-btn up" data-direction="up">↑</div>
+                    <div class="touch-btn left" data-direction="left">←</div>
+                    <div class="touch-btn right" data-direction="right">→</div>
+                    <div class="touch-btn down" data-direction="down">↓</div>
                 </div>
             </div>
         </div>
@@ -315,6 +382,51 @@
                     e.preventDefault();
                     break;
             }
+        });
+
+        // Handle touch controls
+        function handleDirection(direction) {
+            if (!gameRunning) return;
+
+            switch(direction) {
+                case 'up':
+                    if (dy !== 1) {
+                        dx = 0;
+                        dy = -1;
+                    }
+                    break;
+                case 'down':
+                    if (dy !== -1) {
+                        dx = 0;
+                        dy = 1;
+                    }
+                    break;
+                case 'left':
+                    if (dx !== 1) {
+                        dx = -1;
+                        dy = 0;
+                    }
+                    break;
+                case 'right':
+                    if (dx !== -1) {
+                        dx = 1;
+                        dy = 0;
+                    }
+                    break;
+            }
+        }
+
+        // Add touch control event listeners
+        document.querySelectorAll('.touch-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                handleDirection(e.target.dataset.direction);
+            });
+            
+            // Prevent default touch behaviors
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleDirection(e.target.dataset.direction);
+            });
         });
 
         // Game loop
